@@ -61,5 +61,12 @@ http://localhost:9090/auth/realms/SAV/protocol/openid-connect/token
 - [KeyCloak Docker Hub](https://hub.docker.com/r/jboss/keycloak/dockerfile).
 - [KeyCloak Setup Tutorial](https://blog.jdriven.com/2018/10/securing-spring-microservices-with-keycloak-part-1/)
 
+## TODO
+
+- [ ] Finish scripts.
+- [ ] Test scripts.
+- [ ] Added ci/cd.
+- [ ] Export a mssql volume folder.
+
 ----------------------
 © [Singleton SD](http://singletonsd.com), France, 2019.
