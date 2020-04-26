@@ -20,15 +20,22 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-source "${__dir}/create_folders.sh"
-
-KEY_CLOAK_PORT=
-ENV_VARIABLES=
-if [ "$#" -ge 1 ]; then
-    KEY_CLOAK_PORT="${1}"
-    echo "Provided keycloak app port: ${KEY_CLOAK_PORT}"
-    ENV_VARIABLES="KEY_CLOAK_PORT=${KEY_CLOAK_PORT}"
+KEYCLOAK_ENV_FILE="${__root}/.keycloak.env"
+if [ $# -ge 1 ]; then
+    KEYCLOAK_ENV_FILE="${__root}/../${1}"
+else
+    echo "WARN: ENV_FILE name not provided, using default ${KEYCLOAK_ENV_FILE}"
 fi
 
-eval "${ENV_VARIABLES}" docker-compose up -d
+if [ ! -f "${KEYCLOAK_ENV_FILE}" ]; then
+    echo "ERROR: ENV file does not exists. ${KEYCLOAK_ENV_FILE}"
+    exit 1
+fi
 
+docker run --rm -it --name "${DOCKER_NAME}_KC_BACKUP" \
+    -v "${__root}/scripts:/opt/scripts" \
+    -v "${KEYCLOAK_ENV_FILE}/.keycloak.env:/opt/.keycloak.env" \
+    -v "${__root}/conf:/opt/conf" \
+    --entrypoint "/bin/bash" \
+    "jboss/keycloak:${DOCKER_KEYCLOAK_VERSION}" \
+    "/opt/scripts/keycloak_setup.sh"

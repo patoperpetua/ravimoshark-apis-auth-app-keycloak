@@ -20,11 +20,27 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-if [ -f .keycloak.env ]
-then
+KCADM=/opt/jboss/keycloak/bin/kcadm.sh
+
+ENV_FILE="${__dir}/../.keycloak.env"
+
+if [ $# -ge 1 ]; then
+    ENV_FILE="${__dir}/../${1}"
+else
+    echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
+    if [ ! -f "${ENV_FILE}" ]; then
+        echo "WARN: Production env file not found, using dev."
+        ENV_FILE="${__dir}/../.keycloak.dev.env"
+        echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
+    fi
+fi
+
+if [ -f "${ENV_FILE}" ]; then
     # shellcheck disable=SC2046
-    export $(< .env sed 's/#.*//g' | xargs)
-    # export $(grep -v '^#' .env.swagger | xargs)
+    export $(< "${ENV_FILE}" sed 's/#.*//g')
+else
+    echo "ERROR: ${ENV_FILE} file not found."
+    exit 1
 fi
 
 if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
@@ -33,21 +49,21 @@ if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
 fi
 
 echo "Creating groups sav"
-kcadm.sh create groups \
-  --target-realm ${KEYCLOAK_SERVER_REALM} \
+"${KCADM}" create groups \
+  --target-realm "${KEYCLOAK_SERVER_REALM}" \
   --set name=sav -o
 
 echo "Creating groups commercial"
-kcadm.sh create groups \
-  --target-realm ${KEYCLOAK_SERVER_REALM} \
+"${KCADM}" create groups \
+  --target-realm "${KEYCLOAK_SERVER_REALM}" \
   --set name=commercial -o
 
 echo "Creating groups technical"
-kcadm.sh create groups \
-  --target-realm ${KEYCLOAK_SERVER_REALM} \
+"${KCADM}" create groups \
+  --target-realm "${KEYCLOAK_SERVER_REALM}" \
   --set name=technical -o
 
 echo "Creating groups management"
-kcadm.sh create groups \
-  --target-realm ${KEYCLOAK_SERVER_REALM} \
+"${KCADM}" create groups \
+  --target-realm "${KEYCLOAK_SERVER_REALM}" \
   --set name=management -o

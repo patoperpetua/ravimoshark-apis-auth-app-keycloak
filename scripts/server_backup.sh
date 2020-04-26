@@ -20,17 +20,17 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-if [ -f .env ]
-then
-    # shellcheck disable=SC2046
-    export $(< .env sed 's/#.*//g' | xargs)
-    # export $(grep -v '^#' .env.swagger | xargs)
+ENV_FILE="${__dir}/../.keycloak.env"
+
+if [ $# -ge 1 ]; then
+    ENV_FILE="${__dir}/../${1}"
+else
+    echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
+    if [ ! -f "${ENV_FILE}" ]; then
+        echo "WARN: Production env file not found, using dev."
+        ENV_FILE="${__dir}/../.keycloak.dev.env"
+        echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
+    fi
 fi
 
-echo "Creating folder... ${FOLDER_DB}"
-mkdir -p "${__root}${FOLDER_DB}"
-echo "Creating folder... ${FOLDER_KEYCLOAK}"
-mkdir -p "${__root}${FOLDER_KEYCLOAK}"
-echo "Creating folder... ${FOLDER_EXPORTATIONS}"
-mkdir -p "${__root}${FOLDER_EXPORTATIONS}"
-echo "Folders created!"
+docker exec -it "${DOCKER_NAME}_KC" bash -c "./opt/scripts/keycloak_export.sh"

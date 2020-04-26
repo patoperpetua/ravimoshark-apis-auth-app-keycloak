@@ -1,2 +1,3 @@
 volumes
 .keycloak.env
+binaries

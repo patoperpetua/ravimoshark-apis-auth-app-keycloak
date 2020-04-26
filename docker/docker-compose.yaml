@@ -2,6 +2,7 @@ version: "3.3"
 
 services:
   mssql:
+    container_name: ${DOCKER_NAME}_MSSQL
     image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
     ports:
       - "1433:1433"
@@ -9,15 +10,20 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Password!23
       - MSSQL_PID=Developer
-    volumes:
-      - "${FOLDER_DB}:/var/opt/mssql"
+    # volumes:
+    #   - "${FOLDER_DB}:/var/opt/mssql"
+    networks:
+      - keycloak_net
   mssql_scripts:
     image: mcr.microsoft.com/mssql-tools
     depends_on:
       - mssql
     command: /bin/bash -c 'until /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P "Password!23" -Q "create database Keycloak"; do sleep 5; done'
+    networks:
+      - keycloak_net
   keycloak:
-    image: jboss/keycloak:8.0.0
+    container_name: ${DOCKER_NAME}_KC
+    image: jboss/keycloak:${DOCKER_KEYCLOAK_VERSION}
     depends_on:
       - mssql
       - mssql_scripts
@@ -31,3 +37,14 @@ services:
       - DB_PASSWORD=Password!23
       - DB_ADDR=mssql
       - DB_DATABASE=Keycloak
+    volumes:
+      - "../scripts:/opt/scripts"
+      - "../.keycloak.dev.env:/opt/.keycloak.env"
+      - "../conf:/opt/conf"
+      - "../${FOLDER_EXPORTATIONS}:/opt/exportations"
+    networks:
+      - keycloak_net
+
+networks:
+  keycloak_net:
+    driver: overlay

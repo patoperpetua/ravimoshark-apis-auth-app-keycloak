@@ -20,6 +20,8 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
+KCADM=/opt/jboss/keycloak/bin/kcadm.sh
+
 ENV_FILE="${__dir}/../.keycloak.env"
 
 if [ $# -ge 1 ]; then
@@ -41,45 +43,17 @@ else
     exit 1
 fi
 
-if [ -z "${KEYCLOAK_SERVER_ADDR+x}" ]; then
-    echo "ERROR: KEYCLOAK_SERVER_PORT variable not provided!"
+if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
+    echo "ERROR: KEYCLOAK_SERVER_REALM variable not provided!"
     exit 1
 fi
 
-if [ -z "${KEYCLOAK_SERVER_USER+x}" ]; then
-    echo "ERROR: KEYCLOAK_SERVER_USER variable not provided!"
+if [ -z "${KEYCLOAK_SERVER_CONF+x}" ]; then
+    echo "ERROR: KEYCLOAK_SERVER_CONF variable not provided!"
     exit 1
 fi
 
-if [ -z "${KEYCLOAK_SERVER_PASSWORD+x}" ]; then
-    echo "ERROR: KEYCLOAK_SERVER_PASSWORD variable not provided!"
-    exit 1
-fi
-
-echo -ne "Waiting Keycloak server to be ready"
-
-until curl --output /dev/null --silent --head --fail "${KEYCLOAK_SERVER_ADDR}"
-do
-    printf '.'
-    sleep 5
-done
-
-alias kcadm.sh=/opt/jboss/keycloak/bin/kcadm.sh
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_login.sh"
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_create_realm.sh"
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_import.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_groups.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_clients.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_roles.sh"
+echo "Importing realm ${KEYCLOAK_SERVER_REALM} from file ${KEYCLOAK_SERVER_CONF}"
+"${KCADM}" create partialImport \
+    -r "${KEYCLOAK_SERVER_REALM}" -s ifResourceExists=SKIP \
+    -o -f "/opt/conf/realms/${KEYCLOAK_SERVER_CONF}".json

@@ -70,16 +70,4 @@ alias kcadm.sh=/opt/jboss/keycloak/bin/kcadm.sh
 source "${__dir}/keycloak_login.sh"
 
 # shellcheck disable=SC1090
-source "${__dir}/keycloak_create_realm.sh"
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_import.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_groups.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_clients.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_roles.sh"
+source "${__dir}/keycloak_export.sh"

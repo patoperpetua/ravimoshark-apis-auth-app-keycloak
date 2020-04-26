@@ -17,6 +17,7 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename "${__file}" .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)"
 
+
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
@@ -41,6 +42,8 @@ else
     exit 1
 fi
 
+KCADM=/opt/jboss/keycloak/bin/kcadm.sh
+
 if [ -z "${KEYCLOAK_SERVER_ADDR+x}" ]; then
     echo "ERROR: KEYCLOAK_SERVER_PORT variable not provided!"
     exit 1
@@ -56,30 +59,6 @@ if [ -z "${KEYCLOAK_SERVER_PASSWORD+x}" ]; then
     exit 1
 fi
 
-echo -ne "Waiting Keycloak server to be ready"
-
-until curl --output /dev/null --silent --head --fail "${KEYCLOAK_SERVER_ADDR}"
-do
-    printf '.'
-    sleep 5
-done
-
-alias kcadm.sh=/opt/jboss/keycloak/bin/kcadm.sh
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_login.sh"
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_create_realm.sh"
-
-# shellcheck disable=SC1090
-source "${__dir}/keycloak_import.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_groups.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_clients.sh"
-
-# # shellcheck disable=SC1090
-# source "${__dir}/keycloak_create_roles.sh"
+"${KCADM}" config credentials \
+    --server "${KEYCLOAK_SERVER_ADDR}/auth" \
+    --realm master --user "${KEYCLOAK_SERVER_USER}" --password "${KEYCLOAK_SERVER_PASSWORD}"

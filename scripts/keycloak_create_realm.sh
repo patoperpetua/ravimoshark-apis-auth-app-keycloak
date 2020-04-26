@@ -20,28 +20,35 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-if [ -f .keycloak.env ]
-then
+KCADM=/opt/jboss/keycloak/bin/kcadm.sh
+
+ENV_FILE="${__dir}/../.keycloak.env"
+
+if [ $# -ge 1 ]; then
+    ENV_FILE="${__dir}/../${1}"
+else
+    echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
+    if [ ! -f "${ENV_FILE}" ]; then
+        echo "WARN: Production env file not found, using dev."
+        ENV_FILE="${__dir}/../.keycloak.dev.env"
+        echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
+    fi
+fi
+
+if [ -f "${ENV_FILE}" ]; then
     # shellcheck disable=SC2046
-    export $(< .env sed 's/#.*//g' | xargs)
-    # export $(grep -v '^#' .env.swagger | xargs)
+    export $(< "${ENV_FILE}" sed 's/#.*//g')
+else
+    echo "ERROR: ${ENV_FILE} file not found."
+    exit 1
 fi
 
 if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
-    echo: "ERROR: KEYCLOAK_SERVER_REALM variable not provided!"
+    echo "ERROR: KEYCLOAK_SERVER_REALM variable not provided!"
     exit 1
 fi
 
 echo "Creating REALM: ${KEYCLOAK_SERVER_REALM}"
-kcadm.sh create realms \
-  --set realm=${KEYCLOAK_SERVER_REALM} \
-  --set enabled=true
-
-echo "Creating frontend client authetificator"
-kcadm.sh create clients \
-  --target-realm ${KEYCLOAK_SERVER_REALM} \
-  --set clientId=frontend-office \
-  --set directAccessGrantsEnabled=true \
-  --set publicClient=true \
-  --set 'redirectUris=\["http://localhost:8081/\*"\]' \
-  --id
+"${KCADM}" create realms \
+    --set "realm=${KEYCLOAK_SERVER_REALM}" \
+    --set enabled=true

@@ -20,11 +20,28 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-if [ -f .keycloak.env ]
-then
+KCADM=/opt/jboss/keycloak/bin/kcadm.sh
+CONF_FOLDER="${__dir}/../conf/clients"
+
+ENV_FILE="${__dir}/../.keycloak.env"
+
+if [ $# -ge 1 ]; then
+    ENV_FILE="${__dir}/../${1}"
+else
+    echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
+    if [ ! -f "${ENV_FILE}" ]; then
+        echo "WARN: Production env file not found, using dev."
+        ENV_FILE="${__dir}/../.keycloak.dev.env"
+        echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
+    fi
+fi
+
+if [ -f "${ENV_FILE}" ]; then
     # shellcheck disable=SC2046
-    export $(< .env sed 's/#.*//g' | xargs)
-    # export $(grep -v '^#' .env.swagger | xargs)
+    export $(< "${ENV_FILE}" sed 's/#.*//g')
+else
+    echo "ERROR: ${ENV_FILE} file not found."
+    exit 1
 fi
 
 if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
@@ -32,11 +49,32 @@ if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
     exit 1
 fi
 
-echo "Creating frontend client authetificator"
-kcadm.sh create clients \
-  --target-realm ${KEYCLOAK_SERVER_REALM} \
-  --set clientId=frontend-office \
-  --set directAccessGrantsEnabled=true \
-  --set publicClient=true \
-  --set 'redirectUris=\["http://localhost:8081/\*"\]' \
-  --id
+echo "Creating frontend authetificator"
+"${KCADM}" create clients \
+    --target-realm "${KEYCLOAK_SERVER_REALM}" \
+    --file="${CONF_FOLDER}/frontend-web-office.json" \
+    --id
+
+echo "Creating api client authetificator"
+"${KCADM}" create clients \
+    --target-realm "${KEYCLOAK_SERVER_REALM}" \
+    --file="${CONF_FOLDER}/backend-api-client.json" \
+    --id
+
+echo "Creating api contract authetificator"
+"${KCADM}" create clients \
+    --target-realm "${KEYCLOAK_SERVER_REALM}" \
+    --file="${CONF_FOLDER}/backend-api-contract.json" \
+    --id
+
+echo "Creating api piece authetificator"
+"${KCADM}" create clients \
+    --target-realm "${KEYCLOAK_SERVER_REALM}" \
+    --file="${CONF_FOLDER}/backend-api-piece.json" \
+    --id
+
+echo "Creating api task authetificator"
+"${KCADM}" create clients \
+    --target-realm "${KEYCLOAK_SERVER_REALM}" \
+    --file="${CONF_FOLDER}/backend-api-task.json" \
+    --id

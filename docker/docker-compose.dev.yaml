@@ -1,0 +1,7 @@
+version: "3.3"
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    volumes:
+      - "..${FOLDER_DB}:/var/opt/mssql"
