@@ -2,6 +2,8 @@ version: "3.3"
 
 services:
   mssql:
-    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    ports:
+      - "${PORT_DB}:1433"
     volumes:
       - "..${FOLDER_DB}:/var/opt/mssql"
+      - "..${FOLDER_EXPORTATIONS}:/opt/exportations"

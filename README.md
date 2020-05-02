@@ -6,13 +6,18 @@
 
 Just run **./scripts/server_run_local.sh** and access keycloak server in browser [http://localhost:9090](http://localhost:9090). User and password are *admin*.
 
-You can pass port number as first parameter of run script, like following:
+You can change the http port and the port of the mssql server by editing the file *.env*, the parameter names are:
 
 ```bash
-./scripts/run.sh ${OTHER_PORT_THAN_9090}
+PORT_KEYCLOAK=
+PORT_DB=
 ```
 
 After running, you'll have a keycloak server fully configurated to connect to ravimo frontends and APIs.
+
+#### DEBUG / DEVELOPMENT
+
+If you need to have access to the database server (port to connect to and volume data), you can pass any argument to the run server script and it will attach the database server port to localhost and attach database volumes.
 
 ### PRODUCTION
 
@@ -81,6 +86,7 @@ curl -s https://singletonsd.gitlab.io/scripts/common/latest/bash_script_common_h
 - [X] Add documentation about creating a production .keycloak.env file.
 - [X] Add script to setup configuration to an external server.
 - [X] Test scripts.
+- [ ] Add Azure scripts.
 - [ ] Added ci/cd.
 - [ ] Script to persist containers data into a host folder.
 
