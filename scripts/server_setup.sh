@@ -20,7 +20,7 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-ENV_FILE="${__dir}/../.keycloak.env"
+ENV_FILE="${__root}/.keycloak.env"
 
 if [ $# -ge 1 ]; then
     ENV_FILE="${__dir}/../${1}"

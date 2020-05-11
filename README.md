@@ -64,6 +64,23 @@ Then you can execute the setup script contained in *scripts* folder:
 ./opt/scripts/keycloak_import.sh #Import a realm defined in a json file under /conf/realms/ (Setup the KEYCLOAK_SERVER_CONF with the desired name)
 ```
 
+## VERSION GUIDE
+
+Once you have a new keycloak configuration, you need to export the configuration in a json file and also create a backup of the database from the running db container.
+
+To do so, just run the following scripts:
+
+```bash
+./scripts/keycloak_export.sh
+./scripts/mssql/mssql_export.sh
+```
+
+After, you will have two new files one file called *keycloak.bak* and the other *realm-SAV-###.json*, both under *volumes/exportations* path. Copy the first file and put it inside *conf/db/mssql* and the other one in *conf/realms*. Place change their names to add the version number, as the other version files are named. Finally, edit the REALM_VERSION variable inside *.env* file with the new value.
+
+## DATABASE USERS
+
+In order to improve security, there is an sql script in the path *scripts/mssql/mssql_create_users.sql* which explains and contains basic statement of how to create users and asing to them specific roles.
+
 ## GIT HOOK
 
 You can setup shellcheck to be run before a commit. To do that just execute the following script under your git repository:
@@ -86,9 +103,10 @@ curl -s https://singletonsd.gitlab.io/scripts/common/latest/bash_script_common_h
 - [X] Add documentation about creating a production .keycloak.env file.
 - [X] Add script to setup configuration to an external server.
 - [X] Test scripts.
+- [ ] Docker images and script.
 - [ ] Add Azure scripts.
 - [ ] Added ci/cd.
-- [ ] Script to persist containers data into a host folder.
+- [X] Script to persist containers data into a host folder.
 
 - [ ] Export a mssql volume folder.
 

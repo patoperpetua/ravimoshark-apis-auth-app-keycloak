@@ -20,24 +20,39 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-eval "${__dir}/create_folders.sh"
-
 KEY_CLOAK_PORT=9090
 ENV_VARIABLES=
-
+DEV_ENV=
 if [ -z "${DOCKER_KEYCLOAK_VERSION+x}" ]; then
     DOCKER_KEYCLOAK_VERSION=8.0.0
     echo "WARM: DOCKER_KEYCLOAK_VERSION variable not provided, using default ${DOCKER_KEYCLOAK_VERSION}"
 fi
 
 if [ "$#" -ge 1 ]; then
-    KEY_CLOAK_PORT="${1}"
-    echo "Provided keycloak app port: ${KEY_CLOAK_PORT}"
-    ENV_VARIABLES="KEY_CLOAK_PORT=${KEY_CLOAK_PORT} FOLDER_IMPORTATIONS=volumes DOCKER_KEYCLOAK_VERSION=${DOCKER_KEYCLOAK_VERSION}"
+    DEV_ENV=1
 fi
 
+ENV_VARIABLES="KEY_CLOAK_PORT=${KEY_CLOAK_PORT} FOLDER_IMPORTATIONS=volumes DOCKER_KEYCLOAK_VERSION=${DOCKER_KEYCLOAK_VERSION}"
 
-eval "${ENV_VARIABLES}" docker-compose -f docker/docker-compose.yaml up -d
+FLAGS="-f docker/docker-compose.yaml"
+if [ "${DEV_ENV}" == "1" ]; then
+    FLAGS="-f docker/docker-compose.yaml -f docker/docker-compose.dev.yaml"
+    echo "WARN: using developer environment"
+    if [ -d "${FOLDER_DB}/data" ]; then
+        read -r -p "There is data from a previous db instance, Do you want to delete it? [y/N] " response
+        if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]
+        then
+            echo "Deleting previous DB files..."
+            sudo rm -rf "${FOLDER_DB}"
+        else
+            exit 1;
+        fi
+    fi
+fi
+
+eval "${__dir}/create_folders.sh"
+
+eval "${ENV_VARIABLES}" docker-compose "${FLAGS}" up -d
 
 echo -ne "Waiting Keycloak server to be ready"
 
