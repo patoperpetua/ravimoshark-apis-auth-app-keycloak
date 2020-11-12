@@ -20,34 +20,32 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-KCADM=/opt/jboss/keycloak/bin/kcadm.sh
-
-ENV_FILE="${__dir}/../.keycloak.env"
-
-if [ $# -ge 1 ]; then
-    ENV_FILE="${__dir}/../${1}"
+ENV_FILE="env/.test.azure.env"
+if [ $# -ge 2 ]; then
+    ENV_FILE="${1}"
+    echo "ENV_FILE: ${ENV_FILE}"
+    shift
 else
     echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
-    if [ ! -f "${ENV_FILE}" ]; then
-        ENV_FILE="${__dir}/../.keycloak.dev.env"
-        echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
-    fi
 fi
 
-if [ -f "${ENV_FILE}" ]; then
+if [ -f "${ENV_FILE}" ]
+then
     # shellcheck disable=SC2046
-    export $(< "${ENV_FILE}" sed 's/#.*//g')
+    export $(< "${ENV_FILE}" sed 's/#.*//g' | xargs)
+    # export $(grep -v '^#' .env | xargs)
 else
-    echo "ERROR: ${ENV_FILE} file not found."
-    exit 1
+    echo "WARN ENV variable not found."
 fi
+echo -ne "Checking mandatory env variables "
 
-if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
-    echo "ERROR: KEYCLOAK_SERVER_REALM variable not provided!"
-    exit 1
-fi
-
-echo "Creating REALM: ${KEYCLOAK_SERVER_REALM}"
-"${KCADM}" create realms \
-    --set "realm=${KEYCLOAK_SERVER_REALM}" \
-    --set enabled=true
+while [ "${1+x}" != "" ]; do
+    VARIABLE="${1}"
+    if [ -z "${!VARIABLE+x}" ]; then
+        echo "FAIL"
+        echo "ERROR: ${VARIABLE} not provided. Finishing execution."
+        exit 1
+    fi
+    shift
+done
+echo "DONE"

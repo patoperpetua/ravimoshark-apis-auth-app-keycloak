@@ -1,0 +1,7 @@
+/.vscode/
+.gitlab-ci.yml
+README.md
+.env
+.keycloak.env
+/binaries/
+/volumes/

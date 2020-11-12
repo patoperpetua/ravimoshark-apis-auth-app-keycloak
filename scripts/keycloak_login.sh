@@ -28,7 +28,6 @@ if [ $# -ge 1 ]; then
 else
     echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
     if [ ! -f "${ENV_FILE}" ]; then
-        echo "WARN: Production env file not found, using dev."
         ENV_FILE="${__dir}/../.keycloak.dev.env"
         echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
     fi

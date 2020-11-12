@@ -20,34 +20,32 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
-KCADM=/opt/jboss/keycloak/bin/kcadm.sh
+MANDATORY_VARIABLES=("AZURE_DEFAULT_RESOURCE_GROUP" "AZURE_DEFAULT_LOCATION" "AZURE_DEFAULT_SUBSCRIPTION" "AZURE_DB_ADMIN_USER" "AZURE_DB_ADMIN_PASS" "AZURE_DB_SERVER_NAME" "AZURE_DB_DB_NAME")
 
-ENV_FILE="${__dir}/../.keycloak.env"
-
+ENV_FILE="env/.test.azure.env"
 if [ $# -ge 1 ]; then
-    ENV_FILE="${__dir}/../${1}"
+    ENV_FILE="${1}"
 else
     echo "WARN: ENV_FILE name not provided, using default ${ENV_FILE}"
-    if [ ! -f "${ENV_FILE}" ]; then
-        ENV_FILE="${__dir}/../.keycloak.dev.env"
-        echo "WARN: Production env file not found, using dev. ${ENV_FILE}"
-    fi
 fi
 
-if [ -f "${ENV_FILE}" ]; then
+eval "${__root}/check_env.sh" "${ENV_FILE}" "${MANDATORY_VARIABLES[@]}"
+
+if [ -f "${ENV_FILE}" ]
+then
     # shellcheck disable=SC2046
-    export $(< "${ENV_FILE}" sed 's/#.*//g')
+    export $(< "${ENV_FILE}" sed 's/#.*//g' | xargs)
+    # export $(grep -v '^#' .env | xargs)
 else
-    echo "ERROR: ${ENV_FILE} file not found."
-    exit 1
+    echo "WARN ENV variable not found."
 fi
 
-if [ -z "${KEYCLOAK_SERVER_REALM+x}" ]; then
-    echo "ERROR: KEYCLOAK_SERVER_REALM variable not provided!"
-    exit 1
-fi
+az account set --subscription "${AZURE_DEFAULT_SUBSCRIPTION}"
 
-echo "Creating REALM: ${KEYCLOAK_SERVER_REALM}"
-"${KCADM}" create realms \
-    --set "realm=${KEYCLOAK_SERVER_REALM}" \
-    --set enabled=true
+eval "${__dir}/azure_create_group.sh"
+
+eval "${__dir}/azure_create_database.sh"
+
+eval "${__dir}/azure_create_plans.sh"
+
+eval "${__dir}/azure_create_server_keycloak.sh"

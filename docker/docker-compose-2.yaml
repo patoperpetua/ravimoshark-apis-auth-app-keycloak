@@ -3,25 +3,38 @@ version: "3.3"
 services:
   mssql:
     container_name: ${DOCKER_NAME}_MSSQL
-    image: ravimosharksas/apis/auth/db/mssql-clean:2017-latest-ubuntu
+    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    ports:
+      - "1433:1433"
     environment:
-      - SA_PASSWORD=${PASSWORD_DB}
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password!23
       - MSSQL_PID=Developer
+    # volumes:
+    #   - "${FOLDER_DB}:/var/opt/mssql"
+    networks:
+      - keycloak_net
+  mssql_scripts:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - mssql
+    command: /bin/bash -c 'until /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P "Password!23" -Q "create database Keycloak"; do sleep 5; done'
     networks:
       - keycloak_net
   keycloak:
     container_name: ${DOCKER_NAME}_KC
-    image: jboss/keycloak:${DOCKER_KEYCLOAK_VERSION}
+    image: auth:latest
     depends_on:
       - mssql
+      - mssql_scripts
     ports:
-      - "${PORT_KEYCLOAK:-9090}:8080"
+      - "${KEY_CLOAK_PORT:-9090}:8080"
     environment:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
       - DB_VENDOR=mssql
-      - DB_USER=kc_principal
-      - DB_PASSWORD=${PASSWORD_DB}
+      - DB_USER=sa
+      - DB_PASSWORD=Password!23
       - DB_ADDR=mssql
       - DB_DATABASE=Keycloak
     volumes:
