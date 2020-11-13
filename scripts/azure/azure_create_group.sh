@@ -40,7 +40,8 @@ else
     echo "WARN ENV variable not found."
 fi
 
-dbs=($(az group list | jq -r .[].name))
+mapfile -t dbs < <(az group list | jq -r .[].name)
+#dbs=($(az group list | jq -r .[].name))
 create=true
 for i in "${dbs[@]}"
 do

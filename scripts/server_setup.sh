@@ -21,6 +21,7 @@ echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
 # Read env variables
+# shellcheck disable=SC2046
 export $(< ".env" sed 's/#.*//g' | xargs)
 
 ENV_FILE="${__root}/.keycloak.env"

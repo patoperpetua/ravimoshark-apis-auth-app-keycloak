@@ -1,6 +1,5 @@
 
 variables:
-  SCRIPTS_SKIP_TEST: "true"
   DOCKER_PACKAGE: "true"
 
 stages:

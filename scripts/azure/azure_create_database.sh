@@ -54,7 +54,8 @@ echo "Setting default subscription to ${AZURE_DEFAULT_SUBSCRIPTION}"
 az account set -s "${AZURE_DEFAULT_SUBSCRIPTION}"
 
 createServer=true
-servers=($(az sql server list | jq -r .[].name))
+mapfile -t servers < <(az sql server list | jq -r .[].name)
+#servers=($(az sql server list | jq -r .[].name))
 for i in "${servers[@]}"
 do
     if [ "${i}" == "${AZURE_DB_SERVER_NAME}" ]; then
@@ -83,7 +84,8 @@ if [ "${createServer}" == "true" ]; then
         --end-ip-address "${endip}"
 fi
 
-dbs=($(az sql db list --server "${AZURE_DB_SERVER_NAME}" --resource-group "${AZURE_DEFAULT_RESOURCE_GROUP}" | jq -r .[].name))
+mapfile -t dbs < <(az sql db list --server "${AZURE_DB_SERVER_NAME}" --resource-group "${AZURE_DEFAULT_RESOURCE_GROUP}" | jq -r .[].name)
+# dbs=($(az sql db list --server "${AZURE_DB_SERVER_NAME}" --resource-group "${AZURE_DEFAULT_RESOURCE_GROUP}" | jq -r .[].name))
 createServer=true
 for i in "${dbs[@]}"
 do

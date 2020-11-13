@@ -48,7 +48,8 @@ create=true
 if [ "${create}" == "true" ]; then
     for item in "${PLANS[@]}"
     do
-        arrIN=(${item//:/ })
+        mapfile -t arrIN <<< "${item//:/ }"
+        # arrIN=(${item//:/ })
         plan="${arrIN[0]}"
         sku="${arrIN[1]}"
         echo "Creating plan ${plan} with sku ${sku}"
