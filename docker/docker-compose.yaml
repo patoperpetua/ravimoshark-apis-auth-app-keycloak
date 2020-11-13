@@ -3,7 +3,7 @@ version: "3.3"
 services:
   mssql:
     container_name: ${DOCKER_NAME}_MSSQL
-    image: ravimosharksas/apis/auth/db/mssql-clean:2017-latest-ubuntu
+    image: registry.gitlab.com/ravimosharksas/apis/auth/db/mssql-2017-latest-clean:latest
     environment:
       - SA_PASSWORD=${PASSWORD_DB}
       - MSSQL_PID=Developer

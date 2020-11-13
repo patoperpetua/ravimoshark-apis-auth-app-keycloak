@@ -19,8 +19,6 @@ ENV REALM_VERSION=${REALM_VERSION}
 COPY conf/db/mssql/realm-sav-v${REALM_VERSION}.bak /opt/backup/keycloak.bak
 COPY scripts/mssql /opt/scripts
 
-RUN chmod +x /opt/scripts/mssql_import_data.sh
-
 EXPOSE 1433
 
 CMD [ "/bin/bash", "-c", "/opt/scripts/mssql_entrypoint.sh" ]

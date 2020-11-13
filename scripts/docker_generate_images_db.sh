@@ -45,10 +45,10 @@ function usage(){
 }
 
 DOCKER_BUILD_COMMIT_SHA="none"
-DOCKER_BUILD_IMAGES_FOLDER="docker"
+DOCKER_BUILD_IMAGES_FOLDER="docker/db"
 
 if [ -z "${DOCKER_BUILD_BASE_NAME+x}" ]; then
-    DOCKER_BUILD_BASE_NAME="registry.gitlab.com/ravimosharksas/apis/auth/"
+    DOCKER_BUILD_BASE_NAME="registry.gitlab.com/ravimosharksas/apis/auth/db"
 fi
 
 if [ -z "${DOCKER_BUILD_TAG+x}" ]; then
@@ -102,34 +102,45 @@ if [ "${DOCKER_BUILD_COMMIT_SHA}" == "none" ]; then
     fi
 fi
 
-DATE="$(date --rfc-2822 | sed 's/ /T/; s/\(\....\).*-/\1-/g')"
+DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
 if [ "${DOCKER_BUILD_FLAG_PROXY}" == "1" ]; then
     echo "Running with proxy environment."
     DOCKER_BUILD_ENV_PROXY=".docker/.proxy"
 fi
 
-for DOCKER_BUILD_SUBFOLDER in "${DOCKER_BUILD_IMAGES_FOLDER}"/*
+for DOCKER_BUILD_IMAGES_TYPE_FOLDER in "${DOCKER_BUILD_IMAGES_FOLDER}"/*
 do
-    echo "Found subfolder ${DOCKER_BUILD_SUBFOLDER}"
-    DOCKER_BUILD_FILE="${DOCKER_BUILD_SUBFOLDER}/Dockerfile"
-    if [ -f "${DOCKER_BUILD_FILE}" ]; then
-        DOCKER_BUILD_IMAGE_NAME=$(basename "${DOCKER_BUILD_SUBFOLDER}")
-        input="${DOCKER_BUILD_SUBFOLDER}/${DOCKER_BUILD_TAGS_FILES}"
-        while IFS= read -r BASE_IMAGE_TAG
-        do
-            echo "Building image name ${DOCKER_BUILD_IMAGE_NAME}-${BASE_IMAGE_TAG}"
-            DOCKER_CONFIG="${DOCKER_BUILD_ENV_PROXY}" docker build --rm -f "${DOCKER_BUILD_FILE}" -t \
-                "${DOCKER_BUILD_BASE_NAME}/${DOCKER_BUILD_IMAGE_NAME}:${BASE_IMAGE_TAG}-${DOCKER_BUILD_TAG}" \
-                --label "version=${DOCKER_BUILD_TAG}" \
-                --label "vcs-ref=${DOCKER_BUILD_COMMIT_SHA}" \
-                --label "build-date=${DATE}" \
-                --build-arg BASE_IMAGE_TAG="${BASE_IMAGE_TAG}" .
-            if [ "${DOCKER_BUILD_PUSH}" == "1" ]; then
-                docker push "${DOCKER_BUILD_BASE_NAME}/${DOCKER_BUILD_IMAGE_NAME}:${BASE_IMAGE_TAG}-${DOCKER_BUILD_TAG}"
-            fi
-        done < "$input"
-    else
-        echo "Dockerfile not found."
+    if [ ! -d "${DOCKER_BUILD_IMAGES_TYPE_FOLDER}" ]; then
+        continue
     fi
+    DOCKER_BUILD_IMAGE_BASE_NAME="$(basename "${DOCKER_BUILD_IMAGES_TYPE_FOLDER}")"
+    echo "Found build type ${DOCKER_BUILD_IMAGE_BASE_NAME}"
+    for DOCKER_BUILD_SUBFOLDER in "${DOCKER_BUILD_IMAGES_TYPE_FOLDER}"/*
+    do
+        if [ ! -d "${DOCKER_BUILD_SUBFOLDER}" ]; then
+            continue
+        fi
+        echo "Found subfolder ${DOCKER_BUILD_SUBFOLDER}"
+        DOCKER_BUILD_FILE="${DOCKER_BUILD_SUBFOLDER}/Dockerfile"
+        if [ -f "${DOCKER_BUILD_FILE}" ]; then
+            input="${DOCKER_BUILD_IMAGES_TYPE_FOLDER}/${DOCKER_BUILD_TAGS_FILES}"
+            while IFS= read -r BASE_IMAGE_TAG
+            do
+                DOCKER_BUILD_IMAGE_NAME="${DOCKER_BUILD_IMAGE_BASE_NAME}-${BASE_IMAGE_TAG}-$(basename "${DOCKER_BUILD_SUBFOLDER}")"
+                echo "Building image name ${DOCKER_BUILD_IMAGE_NAME}"
+                DOCKER_CONFIG="${DOCKER_BUILD_ENV_PROXY}" docker build --rm -f "${DOCKER_BUILD_FILE}" -t \
+                    "${DOCKER_BUILD_BASE_NAME}/${DOCKER_BUILD_IMAGE_NAME}:${DOCKER_BUILD_TAG}" \
+                    --label "version=${DOCKER_BUILD_TAG}" \
+                    --label "vcs-ref=${DOCKER_BUILD_COMMIT_SHA}" \
+                    --label "build-date=${DATE}" \
+                    --build-arg BASE_IMAGE_TAG="${BASE_IMAGE_TAG}" .
+                if [ "${DOCKER_BUILD_PUSH}" == "1" ]; then
+                    docker push "${DOCKER_BUILD_BASE_NAME}/${DOCKER_BUILD_IMAGE_NAME}:${DOCKER_BUILD_TAG}"
+                fi
+            done < "$input"
+        else
+            echo "Dockerfile not found."
+        fi
+    done
 done

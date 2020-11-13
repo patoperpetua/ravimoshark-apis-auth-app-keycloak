@@ -3,7 +3,7 @@ version: "3.3"
 services:
   mssql:
     container_name: ${DOCKER_NAME}_MSSQL
-    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    image: mcr.microsoft.com/mssql/server:2017-latest
     ports:
       - "1433:1433"
     environment:
