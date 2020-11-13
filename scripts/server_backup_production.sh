@@ -20,6 +20,9 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
+# Read env variables
+export $(< ".env" sed 's/#.*//g' | xargs)
+
 eval "${__dir}/create_folders.sh"
 
 KEYCLOAK_ENV_FILE="${__root}/.keycloak.env"

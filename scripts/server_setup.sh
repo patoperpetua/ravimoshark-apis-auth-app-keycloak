@@ -20,6 +20,9 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 echo "Script name: ${__base}"
 echo "Executing at ${__root}"
 
+# Read env variables
+export $(< ".env" sed 's/#.*//g' | xargs)
+
 ENV_FILE="${__root}/.keycloak.env"
 
 if [ $# -ge 1 ]; then
@@ -33,4 +36,4 @@ else
     fi
 fi
 
-docker exec -it "${DOCKER_NAME}_KC" bash -c "./opt/scripts/keycloak_setup.sh"
+docker exec -it "${DOCKER_NAME}_KC" bash -c "./opt/scripts/keycloak_setup.sh" "$ENV_FILE"
