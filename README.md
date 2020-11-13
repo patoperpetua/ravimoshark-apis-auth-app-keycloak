@@ -103,9 +103,9 @@ curl -s https://singletonsd.gitlab.io/scripts/common/latest/bash_script_common_h
 - [X] Add documentation about creating a production .keycloak.env file.
 - [X] Add script to setup configuration to an external server.
 - [X] Test scripts.
-- [ ] Docker images and script.
+- [X] Docker images and script.
 - [ ] Add Azure scripts.
-- [ ] Added ci/cd.
+- [X] Add ci/cd.
 - [X] Script to persist containers data into a host folder.
 
 - [ ] Export a mssql volume folder.

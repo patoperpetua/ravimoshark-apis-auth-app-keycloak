@@ -1,0 +1,51 @@
+
+variables:
+  SCRIPTS_SKIP_TEST: "true"
+  DOCKER_PACKAGE: "true"
+
+stages:
+  - test
+  - package
+
+test-scripts:
+  image: koalaman/shellcheck-alpine:stable
+  stage: test
+  before_script:
+    - apk add --no-cache bash curl
+  script:
+    - mkdir -p binaries
+    - curl -o binaries/bash_script_test_standalone.sh -L https://singletonsd.gitlab.io/scripts/common/latest/bash_script_test_standalone.sh
+    - chmod +x binaries/bash_script_test_standalone.sh
+    - ./binaries/bash_script_test_standalone.sh
+  except:
+    variables:
+      - $SCRIPTS_SKIP_TEST == "true"
+
+package-docker:
+  image: docker:latest
+  stage: package
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_BUILD_BASE_NAME: ${CI_REGISTRY_IMAGE}
+  before_script:
+    - echo "${REGISTRY_GITLAB_PASS}" | docker login registry.gitlab.com -u ${REGISTRY_GITLAB_USER} --password-stdin
+    - apk add --no-cache bash curl gawk git sed util-linux pciutils usbutils coreutils binutils findutils grep
+  script:
+    - if [ "${CI_COMMIT_REF_NAME}" == "master" ]; then
+        export DOCKER_BUILD_TAG=latest;
+      else
+        export DOCKER_BUILD_TAG=${CI_COMMIT_REF_NAME};
+      fi
+    - ./scripts/docker_generate_images_app.sh -c=${CI_COMMIT_SHA} -p
+    - ./scripts/docker_generate_images_db.sh -c=${CI_COMMIT_SHA} -p
+  only:
+    variables:
+      - $DOCKER_PACKAGE == "true"
+    changes:
+      - conf/**/*
+      - docker/**/*
+      - "*.env"
+      - scripts/**/*
+      - .gitlab-ci.yml
