@@ -15,7 +15,7 @@ test-scripts:
     - mkdir -p binaries
     - curl -o binaries/bash_script_test_standalone.sh -L https://singletonsd.gitlab.io/scripts/common/latest/bash_script_test_standalone.sh
     - chmod +x binaries/bash_script_test_standalone.sh
-    - ./binaries/bash_script_test_standalone.sh
+    - ./binaries/bash_script_test_standalone.sh -o=scripts
   except:
     variables:
       - $SCRIPTS_SKIP_TEST == "true"
